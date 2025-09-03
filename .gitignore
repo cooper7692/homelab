@@ -1,0 +1,13 @@
+*.private.*
+*.secret.*
+*.local.*
+.env
+*.pem
+*.key
+*.secrets
+secrets.*.json
+!*.example.*
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
