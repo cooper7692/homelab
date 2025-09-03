@@ -1,0 +1,16 @@
+services:
+  huntarr:
+    container_name: huntarr
+    restart: always
+    ports:
+      - 9705:9705
+    volumes:
+      - /dockerconfigs/huntarr:/config
+    environment:
+      - TZ=America/New_York
+    image: huntarr/huntarr:latest
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://127.0.0.1:9705 || exit 1
+networks: {}

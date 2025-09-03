@@ -1,69 +1,32 @@
-# Home Lab Config Repository
+# Homelab
 
-This repository is the **authoritative, versioned store** for Cooper’s home lab configs.  
-It is structured for public-safe sync to GitHub (examples only) and private full sync to NAS (with secrets).  
+This repository is the authoritative, versioned store for Cooper’s home lab configs.
 
----
+## Versioning layout
+- The **current** version of each service lives at `services/<service>/`
+- **Archived** versions live at `services/<service>/versions/v000N/`
 
-## 📂 Repository Structure
+## Safety
+- Real secrets in `*.private.*` and `.env` (ignored)
+- Public-safe templates in `*.example.*` (committed)
+- Pre-commit hook blocks sensitive filenames
 
-```
-services/
-  <service>/
-    versions/
-      v0001/
-        compose.yaml
-        .env.example
-        <service>.traefik.config.yaml
-        config/
-          config.example.yml
-
-nodes/
-  node1-ubuntu/{compose,systemd,cron,fstab}/
-  node2-ubuntu/{compose,systemd,cron,fstab}/
-  node3-windows/{compose,systemd,cron,fstab}/
-  nas-truenas/{compose,systemd,cron,fstab}/
-
-.githooks/pre-commit
-.github/workflows/lint.yml
-docs/{changelog.md,decisions.md}
-scripts/{commit-config.sh,new-version.sh}
-scripts/windows/{init-repo.bat,new-version.bat,new-version.ps1,commit-and-push.bat,quick-push.bat,daily-auto-snapshot.xml}
-```
+## Windows & Linux helpers
+- Linux/macOS: `scripts/commit-config.sh`, `scripts/new-version.sh`
+- Windows: `scripts\windows\init-repo.bat`, `new-version.bat/ps1`, `commit-and-push.bat`, `quick-push.bat`
 
 ---
 
-## 🔒 Safety Rules
+## 📜 Version History (Repo-wide)
+### v0.4 — Imported legacy stacks & UI-only Traefik
+- Imported compose files from node1/node2 zips (compose **as-is**)
+- Generated `.env.example` from `${VAR}` placeholders
+- Created **Traefik configs only for services with Web UIs**
+- Added per-service READMEs with node targets
+- Current-in-root layout with `versions/v0001` snapshots
 
-- Real configs → `*.private.*`, `.env` (ignored).  
-- Public-safe templates → `*.example.*` (committed).  
-- Pre-commit hook blocks secrets.  
-- Traefik configs include inline examples.  
+### v0.3 — Current-in-root layout
+- Keep current at `services/<service>/`, archive to `versions/` via helper scripts
 
----
-
-## 🛠️ Helper Scripts
-
-Linux/macOS: `commit-config.sh`, `new-version.sh`  
-Windows: `init-repo.bat`, `new-version.bat/ps1`, `commit-and-push.bat`, `quick-push.bat`, `daily-auto-snapshot.xml`  
-
----
-
-## 🌀 Workflow
-
-1. Initialize repo (`init-repo.bat` or `commit-config.sh`).  
-2. Add new service version (`new-version`).  
-3. Commit & push safe templates.  
-4. Keep `.private` files local + synced to NAS.  
-
----
-
-## 📜 Version History
-
-### v0.1 — Initial Scaffold
-- Repo structure, safety rules, CI, hooks, scripts.
-
-### v0.2 — Frigate v0001
-- Added Frigate (compose, env example, traefik config, config.example).  
-- Added Windows helpers.  
-- Expanded README + changelog.
+### v0.2 — Frigate v0001, Windows helpers
+### v0.1 — Initial scaffold

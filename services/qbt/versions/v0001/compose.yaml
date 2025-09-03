@@ -1,0 +1,29 @@
+services:
+  qbittorrent:
+    container_name: qbittorrent
+    ports:
+      - 8080:8080
+      - 20720:20720
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - UMASK=000
+      - TZ=America/Detroit
+    volumes:
+      - /configs/qbittorrent:/config
+      - /downloads:/downloads
+      - /media/temp:/temp
+      - /docker:/docker
+    image: ghcr.io/hotio/qbittorrent:release-5.1.2
+    restart: always
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://127.0.0.1:8080 || exit 1
+      interval: 1m
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+networks:
+  dockge_default:
+    external: true

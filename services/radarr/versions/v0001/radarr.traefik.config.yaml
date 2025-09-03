@@ -1,0 +1,39 @@
+# Dynamic config for Traefik (file provider)
+http:
+  routers:
+    radarr-radarr-7878-router:
+      # NOTE: Replace only the text inside the quotes. Keep the quotes!
+      # Example: Host("radarr.ttgs.io")
+      rule: Host("<DNS_NAME>")
+      entryPoints: ["websecure"]
+      tls:
+        # NOTE: Replace only inside the quotes. Keep the quotes!
+        # Example: "letsencrypt"
+        certResolver: "<CERT_RESOLVER_NAME>"
+      service: radarr-radarr-7878-svc
+      middlewares:
+        - radarr-security
+        - radarr-gzip
+
+  services:
+    radarr-radarr-7878-svc:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          # NOTE: Replace only <IP_ADDRESS>. Keep the quotes!
+          # Example: "http://192.168.1.45:7878"
+          - url: "http://<IP_ADDRESS>:7878"
+
+  middlewares:
+    radarr-gzip:
+      compress: {}
+
+    radarr-security:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        frameDeny: true
+        contentTypeNosniff: true
+        referrerPolicy: "no-referrer"
+        customFrameOptionsValue: "SAMEORIGIN"

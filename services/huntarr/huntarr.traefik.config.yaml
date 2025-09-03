@@ -1,0 +1,39 @@
+# Dynamic config for Traefik (file provider)
+http:
+  routers:
+    huntarr-huntarr-9705-router:
+      # NOTE: Replace only the text inside the quotes. Keep the quotes!
+      # Example: Host("huntarr.ttgs.io")
+      rule: Host("<DNS_NAME>")
+      entryPoints: ["websecure"]
+      tls:
+        # NOTE: Replace only inside the quotes. Keep the quotes!
+        # Example: "letsencrypt"
+        certResolver: "<CERT_RESOLVER_NAME>"
+      service: huntarr-huntarr-9705-svc
+      middlewares:
+        - huntarr-security
+        - huntarr-gzip
+
+  services:
+    huntarr-huntarr-9705-svc:
+      loadBalancer:
+        passHostHeader: true
+        servers:
+          # NOTE: Replace only <IP_ADDRESS>. Keep the quotes!
+          # Example: "http://192.168.1.45:9705"
+          - url: "http://<IP_ADDRESS>:9705"
+
+  middlewares:
+    huntarr-gzip:
+      compress: {}
+
+    huntarr-security:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        frameDeny: true
+        contentTypeNosniff: true
+        referrerPolicy: "no-referrer"
+        customFrameOptionsValue: "SAMEORIGIN"

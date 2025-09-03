@@ -1,3 +1,4 @@
 # Decisions
-- Use versioned folders per service.
-- Keep examples public, secrets private.
+- Current version lives at services/<service>/
+- Snapshots archived at services/<service>/versions/v000N/
+- Use *.example.* for templates, keep secrets in *.private.* and .env

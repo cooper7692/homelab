@@ -1,2 +1,0 @@
-# Traefik config with placeholders
-rule: Host("<DNS_NAME>")

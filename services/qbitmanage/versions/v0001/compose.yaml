@@ -1,0 +1,55 @@
+services:
+  qbit_manage:
+    image: ghcr.io/stuffanthings/qbit_manage:v4.5.5
+    container_name: qbit_manage
+    restart: unless-stopped
+    environment:
+      - TZ=America/Detroit
+      # Web API Configuration
+      - QBT_WEB_SERVER=true
+      - QBT_PORT=8080
+      # Scheduler Configuration
+      - QBT_RUN=true
+      - QBT_SCHEDULE=1440
+      - QBT_CONFIG=/config/config.yml
+      - QBT_LOGFILE=activity.log
+      # Command Flags
+      - QBT_RECHECK=false
+      - QBT_CAT_UPDATE=false
+      - QBT_TAG_UPDATE=false
+      - QBT_REM_UNREGISTERED=false
+      - QBT_REM_ORPHANED=true
+      - QBT_TAG_TRACKER_ERROR=true
+      - QBT_TAG_NOHARDLINKS=false
+      - QBT_SHARE_LIMITS=false
+      - QBT_SKIP_CLEANUP=false
+      - QBT_DRY_RUN=false
+      - QBT_STARTUP_DELAY=0
+      - QBT_SKIP_QB_VERSION_CHECK=false
+      - QBT_DEBUG=false
+      - QBT_TRACE=false
+      # Logging Configuration
+      - QBT_LOG_LEVEL=INFO
+      - QBT_LOG_SIZE=10
+      - QBT_LOG_COUNT=5
+      - QBT_DIVIDER==
+      - QBT_WIDTH=100
+    volumes:
+      - /downloads:/downloads:rw
+      - /configs/qbitmanage/config:/config:rw
+      - /docker:/docker
+    ports:
+      - 8181:8080
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - wget -q --spider http://127.0.0.1:8080 || exit 1
+      interval: 1m
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+networks:
+  dockge_default:
+    external: true
+  qbt_default:
+    external: true

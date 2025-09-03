@@ -2,7 +2,7 @@
 set -euo pipefail
 blocked='(\.private\.|\.secret\.|\.local\.|(^|/)\.env$)'
 if git diff --cached --name-only | grep -E "$blocked" >/dev/null; then
-  echo "❌ Commit blocked: staged files match sensitive patterns."
+  echo "❌ Commit blocked: staged files match sensitive patterns (*.private.*, *.secret.*, *.local.*, .env)."
   exit 1
 fi
 exit 0

@@ -1,0 +1,43 @@
+services:
+  tdarr-node:
+    container_name: tdarr-node
+    image: ghcr.io/haveagitgat/tdarr_node:latest
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - nodeName=Node2
+      - serverIP=192.168.1.233
+      - serverPort=8266
+      - inContainer=true
+      - ffmpegVersion=7
+      - nodeType=mapped
+      - priority=-1
+      - cronPluginUpdate=
+      - apiKey=
+      - maxLogSizeMB=10
+      - pollInterval=2000
+      - startPaused=false
+      - transcodegpuWorkers=1
+      - healthcheckgpuWorkers=1
+      - healthcheckcpuWorkers=1
+    volumes:
+      - /docker/tdarrnode2/configs:/app/configs
+      - /docker/tdarrnode2/logs:/app/logs
+      - /media:/media
+      - /media/Tdarr:/temp
+    healthcheck:
+      test: ["CMD-SHELL", "ping -c 1 $serverIP || exit 1"]
+      interval: 60s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+    devices:
+      - /dev/dri:/dev/dri
+    networks:
+      - dockge_default
+networks:
+  dockge_default:
+    external: true
