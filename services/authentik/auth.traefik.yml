@@ -1,0 +1,37 @@
+# Routes https://auth.ttgs.io to the Authentik backend (authentik:9000).
+# Standard layout: TLS on websecure, service-specific headers middleware,
+# and a commented slot for forward-auth (DO NOT protect Authentik with itself).
+
+http:
+  routers:
+    authentik:
+      rule: Host(`auth.ttgs.io`)
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+      service: authentik
+      middlewares:
+        - authentik-sec-headers
+        # - ak-forward-auth   # ← do NOT enable on Authentik itself
+
+  services:
+    authentik:
+      loadBalancer:
+        servers:
+          - url: http://192.168.1.231:9000/
+
+  middlewares:
+    authentik-sec-headers:
+      headers:
+        sslRedirect: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        contentTypeNosniff: true
+        frameDeny: true
+        browserXssFilter: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+
+
+

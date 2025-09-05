@@ -1,0 +1,140 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: ak-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DB}
+    volumes:
+      - ak_db:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U ${PG_USER} -d ${PG_DB}
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - traefik
+      - ak_internal
+  redis:
+    image: docker.io/library/redis:7-alpine
+    container_name: ak-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --save
+      - ""
+      - --appendonly
+      - no
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 10s
+      timeout: 3s
+      retries: 15
+    networks:
+      - traefik
+      - ak_internal
+  authentik:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: server
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_EXTERNAL_URL: ${AUTHENTIK_EXTERNAL_URL}
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASSWORD}
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB}
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__PORT: 6379
+      AUTHENTIK_LISTEN__HTTP: 0.0.0.0:9000
+      AUTHENTIK_DISABLE_HTTPS: "true"
+      AUTHENTIK_USE_X_FORWARDED_HOST: "true"
+      AUTHENTIK_SECURE_PROXY_SSL_HEADER: HTTP_X_FORWARDED_PROTO,https
+      AUTHENTIK_BOOTSTRAP_EMAIL: cooper7692@gmail.com
+      AUTHENTIK_BOOTSTRAP_PASSWORD: admin
+    volumes:
+      - ak_media:/media
+      - ak_templates:/templates
+    # Publish the backend HTTP port to the host so Traefik can reach it by IP
+    ports:
+      - 9000:9000
+    # Robust healthcheck (tries ready/live with trailing slash)
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - |
+          python3 - <<'PY'
+          import sys,urllib.request
+          urls = [
+              "http://127.0.0.1:9000/-/health/ready/",
+              "http://127.0.0.1:9000/-/health/live/",
+              "http://127.0.0.1:9000/-/health/ready",
+              "http://127.0.0.1:9000/-/health/live",
+          ]
+          ok=False
+          for u in urls:
+              try:
+                  r=urllib.request.urlopen(u,timeout=5)
+                  if 200 <= getattr(r,"status",200) < 400:
+                      ok=True;break
+              except Exception: pass
+          sys.exit(0 if ok else 1)
+          PY
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+    networks:
+      - traefik
+      - ak_internal
+  worker:
+    image: ghcr.io/goauthentik/server:latest
+    container_name: authentik-worker
+    restart: unless-stopped
+    command: worker
+    depends_on:
+      authentik:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      AUTHENTIK_SECRET_KEY: ${AUTHENTIK_SECRET_KEY}
+      AUTHENTIK_POSTGRESQL__HOST: postgres
+      AUTHENTIK_POSTGRESQL__PORT: 5432
+      AUTHENTIK_POSTGRESQL__USER: ${PG_USER}
+      AUTHENTIK_POSTGRESQL__PASSWORD: ${PG_PASSWORD}
+      AUTHENTIK_POSTGRESQL__NAME: ${PG_DB}
+      AUTHENTIK_REDIS__HOST: redis
+      AUTHENTIK_REDIS__PORT: 6379
+    volumes:
+      - ak_media:/media
+      - ak_templates:/templates
+    networks:
+      - ak_internal
+      - traefik
+volumes:
+  ak_db: null
+  ak_media: null
+  ak_templates: null
+networks:
+  ak_internal:
+    driver: bridge
+  traefik:
+    external: true

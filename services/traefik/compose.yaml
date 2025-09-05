@@ -57,6 +57,7 @@ services:
       - ${PROXY_LOG_DIR}:/logs
     labels:
       - "traefik.enable=true"
+      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIKADMIN}"
 
 networks:
   dockge_default:
