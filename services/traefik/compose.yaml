@@ -1,65 +1,63 @@
+version: "3.9"
+
 services:
   traefik:
     image: traefik:v3.0
     container_name: traefik
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
     networks:
       - dockge_default
     ports:
-      - 80:80
-      - 443:443
-      - 7777:8080
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/proxy/config:/etc/traefik
-      - /opt/proxy/configs:/configs
-      - /opt/proxy/acme.json:/acme.json
-      - /opt/proxy/logs:/logs
+      - "80:80"
+      - "443:443"
+      - "7777:8080" # dashboard
     environment:
-      - TZ=America/Detroit
-      - PUID=1000
-      - PGID=1000
-      - CLOUDFLARE_API_KEY=f3c9aff553decc41c18f0b814298621064787
-      - CLOUDFLARE_EMAIL=cooper7692@gmail.com
-      - CLOUDFLARE_DNS_API_TOKEN=Fkq4T086GLbOYieIEyRYjgt2UWrThtPqre-r5QzN
-    labels:
-      - traefik.enable=true
-      - traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIKADMIN}
-      - traefik.http.middlewares.test-auth.forwardauth.tls.insecureSkipVerify=true
-      - traefik.http.middlewares.test-auth.forwardauth.trustForwardHeader=true
-      - traefik.http.routers.traefik-https.entrypoints=https
-      - traefik.http.routers.traefik-https.rule=Host(`myproxy.ttgs.io`)
-      - traefik.http.routers.traefik-https.service=api@internal
-      - traefik.http.routers.traefik-https.tls.certresolver=letsencrypt
-      - traefik.http.routers.traefik-https.tls.domains[0].main=ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[1].main=sonarr.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[2].main=radarr.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[3].main=ha.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[4].main=prowlarr.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[5].main=qbt.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[6].main=plex.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[7].main=proxy.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[8].main=unifi.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[9].main=node1.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[10].main=truenass.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[11].main=truenas.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[12].main=tdarr.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[13].main=coder.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[14].main=paperless.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[15].main=node2.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[16].main=git.ttgs.io
-      - traefik.http.routers.traefik-https.tls.domains[17].main=huntarr.ttgs.io
-      #- traefik.http.routers.traefik-https.tls.domains[18].main=git.ttgs.io
-      #- traefik.http.routers.traefik-https.tls.domains[19].main=git.ttgs.io
-      #- traefik.http.routers.traefik-https.tls.domains[20].main=git.ttgs.io
-      #- traefik.http.routers.traefik-https.tls.domains[21].main=git.ttgs.io
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      # --- Cloudflare (DNS-01) creds pulled from .env (DO NOT COMMIT .env) ---
+      - CF_API_EMAIL=${CF_API_EMAIL}
+      - CF_API_KEY=${CF_API_KEY}                        # legacy global key (if you use it)
+      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}            # preferred: scoped token for DNS edits
+      - ACME_EMAIL=${ACME_EMAIL}
+    command:
+      # Providers
+      - "--providers.file.directory=/configs"
+      - "--providers.file.watch=true"
 
-    healthcheck:
-      test:
-        - CMD-SHELL
-        - wget -q --spider http://127.0.0.1:8080 || exit 1
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+
+      # API / dashboard (served on :8080 internally, routed via file provider)
+      - "--api=true"
+      - "--api.dashboard=true"
+
+      # ACME (Let's Encrypt) resolver "letsencrypt" via DNS-01 (Cloudflare)
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
+
+      # Logs (optional)
+      - "--log.level=INFO"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/logs/access.log"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${PROXY_CONFIG_DIR}:/etc/traefik
+      - ${PROXY_CONFIGS_DIR}:/configs
+      - ${PROXY_ACME_JSON}:/acme.json
+      - ${PROXY_LOG_DIR}:/logs
+    labels:
+      - "traefik.enable=true"
+
 networks:
   dockge_default:
-    external: true
-  qbt_default:
     external: true
