@@ -1,0 +1,19 @@
+http:
+  middlewares:
+    authentik-forward-auth:
+      forwardAuth:
+        address: "https://auth.ttgs.io/outpost.goauthentik.io/auth/traefik"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-authentik-username
+          - X-authentik-groups
+
+
+
+
+
+
+
+
+
+
