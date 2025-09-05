@@ -1,29 +1,29 @@
 # NOTE: Replace only the text inside the quotes. Keep the quotes!
-# Example: Host("radarr.ttgs.io")
+# Example: Host("node2.ttgs.io")
 http:
   routers:
-    radarr-router:
-      rule: Host("radarr.ttgs.io")
+    node2-router:
+      rule: Host("node2.ttgs.io")
       entryPoints: ["websecure"]
       tls:
         certResolver: "letsencrypt"
-      service: radarr-svc
+      service: node2-svc
       middlewares:
-        - radarr-security
-        - radarr-gzip
+        - node2-security
+        - node2-gzip
 
   services:
-    radarr-svc:
+    node2-svc:
       loadBalancer:
         passHostHeader: true
         servers:
-          - url: "http://192.168.1.231:7878"
+          - url: "http://192.168.1.172:22"
 
   middlewares:
-    radarr-gzip:
+    node2-gzip:
       compress: {}
 
-    radarr-security:
+    node2-security:
       headers:
         stsSeconds: 31536000
         stsIncludeSubdomains: true

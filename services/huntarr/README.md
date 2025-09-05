@@ -1,18 +1,8 @@
-# huntarr Service
+# huntarr
 
-**Node target:** node2
+- DNS: `huntarr.ttgs.io`
+- Node: `node1`
+- IP: `192.168.1.231`
+- Port: `3000`
 
-This folder holds the **CURRENT** configuration for `huntarr`. Archived snapshots live in `versions/`.
-
-## Files
-- `compose.yaml` — copied from your uploaded repo (no changes)
-- `.env.example` — placeholders extracted from compose (`${VARS}`)
-- `huntarr.traefik.config.yaml` — Traefik dynamic config for Web UI only (if present)
-
-## Sensitive Info
-Keep real secrets in `*.private.*` or `.env` (ignored by Git). Commit only the `*.example.*` templates.
-
-## Snapshotting
-When you want to archive the current state:
-- Linux/macOS: `./scripts/new-version.sh huntarr`
-- Windows: `scripts\windows\new-version.bat huntarr`
+Traefik routing defined in `huntarr.traefik.config.yaml`.

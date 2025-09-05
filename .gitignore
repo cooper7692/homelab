@@ -1,4 +1,4 @@
-# Sensitive: never commit
+# Sensitive
 *.private.*
 *.secret.*
 *.local.*
