@@ -1,0 +1,15 @@
+http:
+  routers:
+    dockge2:
+      rule: Host(`dockge2.ttgs.io`)
+      entryPoints: ["websecure"]
+      tls:
+        certResolver: letsencrypt
+      service: dockge2-svc
+      middlewares:
+        - security-headers
+  services:
+    dockge2-svc:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.172:5001"

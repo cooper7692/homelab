@@ -1,0 +1,10 @@
+http:
+  routers:
+    traefik-dashboard:
+      rule: Host(`traefik.ttgs.io`)
+      entryPoints: ["websecure"]
+      tls:
+        certResolver: letsencrypt
+      service: api@internal
+      middlewares:
+        - security-headers

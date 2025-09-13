@@ -1,0 +1,15 @@
+http:
+  routers:
+    qbt:
+      rule: Host(`qbt.ttgs.io`)
+      entryPoints: ["websecure"]
+      tls:
+        certResolver: letsencrypt
+      service: qbt-svc
+      middlewares:
+        - security-headers
+  services:
+    qbt-svc:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.172:8080"

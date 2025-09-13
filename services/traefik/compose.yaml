@@ -1,64 +1,19 @@
-version: "3.9"
-
 services:
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3.1
     container_name: traefik
-    restart: always
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080 || exit 1"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-    networks:
-      - dockge_default
-    ports:
-      - "80:80"
-      - "443:443"
-      - "7777:8080" # dashboard
-    environment:
-      - TZ=${TZ}
-      - PUID=${PUID}
-      - PGID=${PGID}
-      # --- Cloudflare (DNS-01) creds pulled from .env (DO NOT COMMIT .env) ---
-      - CF_API_EMAIL=${CF_API_EMAIL}
-      - CF_API_KEY=${CF_API_KEY}                        # legacy global key (if you use it)
-      - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}            # preferred: scoped token for DNS edits
-      - ACME_EMAIL=${ACME_EMAIL}
+    restart: unless-stopped
     command:
-      # Providers
-      - "--providers.file.directory=/configs"
-      - "--providers.file.watch=true"
-
-      # Entrypoints
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
-      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
-
-      # API / dashboard (served on :8080 internally, routed via file provider)
-      - "--api=true"
-      - "--api.dashboard=true"
-
-      # ACME (Let's Encrypt) resolver "letsencrypt" via DNS-01 (Cloudflare)
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/acme.json"
-      - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
-
-      # Logs (optional)
-      - "--log.level=INFO"
-      - "--accesslog=true"
-      - "--accesslog.filepath=/logs/access.log"
+      - --configFile=/config/traefik.yml
+    environment:
+      CF_API_EMAIL: "${CF_API_EMAIL}"
+      CF_API_KEY: "${CF_API_KEY}"
+      ACME_EMAIL: "${ACME_EMAIL}"
+    ports:
+      - 80:80
+      - 443:443
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${PROXY_CONFIG_DIR}:/etc/traefik
-      - ${PROXY_CONFIGS_DIR}:/configs
-      - ${PROXY_ACME_JSON}:/acme.json
-      - ${PROXY_LOG_DIR}:/logs
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.traefik-auth.basicauth.users=${TRAEFIKADMIN}"
-
-networks:
-  dockge_default:
-    external: true
+      - /opt/proxy/config:/config
+      - /opt/proxy/configs:/configs
+      - /opt/proxy/letsencrypt:/letsencrypt
+networks: {}

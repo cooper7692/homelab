@@ -1,0 +1,21 @@
+http:
+  serversTransports:
+    truenas-insecure:
+      insecureSkipVerify: true
+
+  routers:
+    truenas:
+      rule: Host(`truenas.ttgs.io`)
+      entryPoints: ["websecure"]
+      tls:
+        certResolver: letsencrypt
+      service: truenas-svc
+      middlewares:
+        - security-headers
+
+  services:
+    truenas-svc:
+      loadBalancer:
+        serversTransport: truenas-insecure
+        servers:
+          - url: "https://192.168.1.45"

@@ -1,0 +1,15 @@
+http:
+  routers:
+    sonarr:
+      rule: Host(`sonarr.ttgs.io`)
+      entryPoints: ["websecure"]
+      tls:
+        certResolver: letsencrypt
+      service: sonarr-svc
+      middlewares:
+        - security-headers
+  services:
+    sonarr-svc:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.231:8989"

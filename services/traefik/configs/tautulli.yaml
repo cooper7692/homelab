@@ -1,0 +1,15 @@
+http:
+  routers:
+    tautulli:
+      rule: Host(`tautulli.ttgs.io`)
+      entryPoints: ["websecure"]
+      tls:
+        certResolver: letsencrypt
+      service: tautulli-svc
+      middlewares:
+        - security-headers
+  services:
+    tautulli-svc:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.231:8181"

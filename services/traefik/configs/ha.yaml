@@ -1,0 +1,15 @@
+http:
+  routers:
+    ha:
+      rule: Host(`ha.ttgs.io`)
+      entryPoints: ["websecure"]
+      tls:
+        certResolver: letsencrypt
+      service: ha-svc
+      middlewares:
+        - security-headers
+  services:
+    ha-svc:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.1.246:8123"
